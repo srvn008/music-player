@@ -11,6 +11,8 @@ public class FrameMusicPlayer extends javax.swing.JFrame {
 
     private Clip clip;
 
+    private DefaultListModel<String> modelo = new DefaultListModel<>();
+
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(FrameMusicPlayer.class.getName());
 
     /**
@@ -18,6 +20,31 @@ public class FrameMusicPlayer extends javax.swing.JFrame {
      */
     public FrameMusicPlayer() {
         initComponents();
+        modelo.clear();
+
+        String userHome = System.getProperty("user.home");
+        File musicFolder = new File(userHome, "Music"); // En inglés (Windows)
+        if (!musicFolder.exists()) {
+            musicFolder = new File(userHome, "Música"); // En español
+        }
+        System.out.print(musicFolder.getPath());
+
+        File[] listaArchivos = musicFolder.listFiles();
+
+// 2. Es MUY importante verificar si es nulo (por si la carpeta está vacía o no hay permisos)
+        if (listaArchivos != null) {
+            System.out.println("Contenido de la carpeta:");
+
+            for (File archivo : listaArchivos) {
+                // 3. Diferenciamos si es un archivo o una subcarpeta
+                if (archivo.isFile() && archivo.getName().endsWith(".wav")) {
+                    modelo.addElement(archivo.getName());
+                }
+            }
+        } else {
+            System.out.println("La carpeta no existe o no se puede leer.");
+        }
+
     }
 
     /**
@@ -31,7 +58,8 @@ public class FrameMusicPlayer extends javax.swing.JFrame {
 
         jPanel1 = new javax.swing.JPanel();
         jPanel3 = new javax.swing.JPanel();
-        jLabel1 = new javax.swing.JLabel();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        myListMusic = new javax.swing.JList<>();
         jPanel2 = new javax.swing.JPanel();
         jButton4 = new javax.swing.JButton();
         jPanel4 = new javax.swing.JPanel();
@@ -41,23 +69,24 @@ public class FrameMusicPlayer extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        jLabel1.setText("jLabel1");
+        myListMusic.setModel(modelo);
+        jScrollPane1.setViewportView(myListMusic);
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jLabel1)
-                .addContainerGap(221, Short.MAX_VALUE))
+                .addGap(37, 37, 37)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(180, Short.MAX_VALUE))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                .addContainerGap(216, Short.MAX_VALUE)
-                .addComponent(jLabel1)
-                .addContainerGap())
+            .addGroup(jPanel3Layout.createSequentialGroup()
+                .addGap(30, 30, 30)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(62, Short.MAX_VALUE))
         );
 
         jButton4.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/srvn/assets/upload.png"))); // NOI18N
@@ -157,7 +186,7 @@ public class FrameMusicPlayer extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addGap(200, 200, 200)
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(222, Short.MAX_VALUE))
+                .addContainerGap(238, Short.MAX_VALUE))
         );
 
         pack();
@@ -175,7 +204,7 @@ public class FrameMusicPlayer extends javax.swing.JFrame {
 
         JFileChooser fileChooser = new JFileChooser();
         FileNameExtensionFilter filtro = new FileNameExtensionFilter(
-                "Archivos WAV",
+                "Solo archivos tipo WAV",
                 "wav"
         );
         fileChooser.setFileFilter(filtro);
@@ -185,37 +214,8 @@ public class FrameMusicPlayer extends javax.swing.JFrame {
             //reproducirArchivo(archivo);
             System.out.println(archivo.getPath());
 
-            try {
-                AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(archivo);
+            this.reproducirArchivo(archivo);
 
-                clip = AudioSystem.getClip();
-                clip.open(audioInputStream);
-                clip.start();
-
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Reproduciendo: " + archivo.getName()
-                );
-            } catch (UnsupportedAudioFileException ex) {
-                JOptionPane.showMessageDialog(
-                        this,
-                        "El archivo no es un WAV válido."
-                );
-
-            } catch (LineUnavailableException ex) {
-                JOptionPane.showMessageDialog(
-                        this,
-                        "No hay línea de audio disponible."
-                );
-
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Error al reproducir el archivo."
-                );
-
-                ex.printStackTrace();
-            }
         }
     }//GEN-LAST:event_jButton4ActionPerformed
 
@@ -223,6 +223,46 @@ public class FrameMusicPlayer extends javax.swing.JFrame {
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_jButton3ActionPerformed
+
+    public void reproducirArchivo(File archivo) {
+
+        try {
+            if (clip != null && clip.isRunning()) {
+                clip.stop();
+                clip.close();
+            }
+            AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(archivo);
+
+            clip = AudioSystem.getClip();
+            clip.open(audioInputStream);
+            clip.start();
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Reproduciendo: " + archivo.getName()
+            );
+        } catch (UnsupportedAudioFileException ex) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "El archivo no es un WAV válido."
+            );
+
+        } catch (LineUnavailableException ex) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "No hay línea de audio disponible."
+            );
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Error al reproducir el archivo."
+            );
+
+            ex.printStackTrace();
+        }
+
+    }
 
     /**
      * @param args the command line arguments
@@ -254,10 +294,11 @@ public class FrameMusicPlayer extends javax.swing.JFrame {
     private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
     private javax.swing.JButton jButton4;
-    private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JList<String> myListMusic;
     // End of variables declaration//GEN-END:variables
 }
