@@ -8,6 +8,11 @@ import javax.swing.*;
 import javax.sound.sampled.*;
 
 public class FrameMusicPlayer extends javax.swing.JFrame {
+    //TODO : terminar barra de progreso, 
+    //TODO : al terminar cancion reproducir siguiente automaticamente
+    //TODO : poner controlador de sonido (mute)
+    //TODO : poner imagen de portada
+    //TODO : poner el nombre de la cancion debajo del nombre
 
     private File[] playList;
 
@@ -48,7 +53,7 @@ public class FrameMusicPlayer extends javax.swing.JFrame {
         jPanel3 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         myListMusic = new javax.swing.JList<>();
-        jProgressBar1 = new javax.swing.JProgressBar();
+        prgressBar = new javax.swing.JProgressBar();
         jPanel2 = new javax.swing.JPanel();
         buttonLadFolder = new javax.swing.JButton();
         jPanel4 = new javax.swing.JPanel();
@@ -63,6 +68,8 @@ public class FrameMusicPlayer extends javax.swing.JFrame {
         myListMusic.addListSelectionListener(this::myListMusicValueChanged);
         jScrollPane1.setViewportView(myListMusic);
 
+        prgressBar.setStringPainted(true);
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
@@ -71,7 +78,7 @@ public class FrameMusicPlayer extends javax.swing.JFrame {
                 .addGap(37, 37, 37)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jScrollPane1)
-                    .addComponent(jProgressBar1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(prgressBar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap(54, Short.MAX_VALUE))
         );
         jPanel3Layout.setVerticalGroup(
@@ -80,7 +87,7 @@ public class FrameMusicPlayer extends javax.swing.JFrame {
                 .addGap(30, 30, 30)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 30, Short.MAX_VALUE)
-                .addComponent(jProgressBar1, javax.swing.GroupLayout.PREFERRED_SIZE, 15, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(prgressBar, javax.swing.GroupLayout.PREFERRED_SIZE, 15, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(17, 17, 17))
         );
 
@@ -430,8 +437,8 @@ public class FrameMusicPlayer extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
-    private javax.swing.JProgressBar jProgressBar1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JList<String> myListMusic;
+    private javax.swing.JProgressBar prgressBar;
     // End of variables declaration//GEN-END:variables
 }
