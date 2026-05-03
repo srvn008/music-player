@@ -9,6 +9,10 @@ import javax.sound.sampled.*;
 
 public class FrameMusicPlayer extends javax.swing.JFrame {
 
+    private File[] playList;
+
+    private Integer playPosition = null;
+
     private Clip clip;
 
     private DefaultListModel<String> modelo = new DefaultListModel<>();
@@ -20,7 +24,6 @@ public class FrameMusicPlayer extends javax.swing.JFrame {
      */
     public FrameMusicPlayer() {
         initComponents();
-        modelo.clear();
 
         String userHome = System.getProperty("user.home");
         File musicFolder = new File(userHome, "Music"); // En inglés (Windows)
@@ -29,22 +32,7 @@ public class FrameMusicPlayer extends javax.swing.JFrame {
         }
         System.out.print(musicFolder.getPath());
 
-        File[] listaArchivos = musicFolder.listFiles();
-
-// 2. Es MUY importante verificar si es nulo (por si la carpeta está vacía o no hay permisos)
-        if (listaArchivos != null) {
-            System.out.println("Contenido de la carpeta:");
-
-            for (File archivo : listaArchivos) {
-                // 3. Diferenciamos si es un archivo o una subcarpeta
-                if (archivo.isFile() && archivo.getName().endsWith(".wav")) {
-                    modelo.addElement(archivo.getName());
-                }
-            }
-        } else {
-            System.out.println("La carpeta no existe o no se puede leer.");
-        }
-
+        loadPlayList(musicFolder.getAbsolutePath());
     }
 
     /**
@@ -61,15 +49,17 @@ public class FrameMusicPlayer extends javax.swing.JFrame {
         jScrollPane1 = new javax.swing.JScrollPane();
         myListMusic = new javax.swing.JList<>();
         jPanel2 = new javax.swing.JPanel();
-        jButton4 = new javax.swing.JButton();
+        buttonLadFolder = new javax.swing.JButton();
         jPanel4 = new javax.swing.JPanel();
-        jButton1 = new javax.swing.JButton();
-        jButton2 = new javax.swing.JButton();
-        jButton3 = new javax.swing.JButton();
+        buttonPlay = new javax.swing.JButton();
+        buttonStop = new javax.swing.JButton();
+        buttonNext = new javax.swing.JButton();
+        buttonPrev = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
         myListMusic.setModel(modelo);
+        myListMusic.addListSelectionListener(this::myListMusicValueChanged);
         jScrollPane1.setViewportView(myListMusic);
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
@@ -89,8 +79,8 @@ public class FrameMusicPlayer extends javax.swing.JFrame {
                 .addContainerGap(62, Short.MAX_VALUE))
         );
 
-        jButton4.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/srvn/assets/upload.png"))); // NOI18N
-        jButton4.addActionListener(this::jButton4ActionPerformed);
+        buttonLadFolder.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/srvn/assets/upload.png"))); // NOI18N
+        buttonLadFolder.addActionListener(this::buttonLadFolderActionPerformed);
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -98,47 +88,52 @@ public class FrameMusicPlayer extends javax.swing.JFrame {
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addGap(41, 41, 41)
-                .addComponent(jButton4)
+                .addComponent(buttonLadFolder)
                 .addContainerGap(119, Short.MAX_VALUE))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addGap(190, 190, 190)
-                .addComponent(jButton4)
+                .addComponent(buttonLadFolder)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        jButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/srvn/assets/boton-play.png"))); // NOI18N
-        jButton1.addActionListener(this::jButton1ActionPerformed);
+        buttonPlay.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/srvn/assets/boton-play.png"))); // NOI18N
+        buttonPlay.addActionListener(this::buttonPlayActionPerformed);
 
-        jButton2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/srvn/assets/boton-de-pausa.png"))); // NOI18N
-        jButton2.addActionListener(this::jButton2ActionPerformed);
+        buttonStop.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/srvn/assets/detener.png"))); // NOI18N
+        buttonStop.addActionListener(this::buttonStopActionPerformed);
 
-        jButton3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/srvn/assets/detener.png"))); // NOI18N
-        jButton3.addActionListener(this::jButton3ActionPerformed);
+        buttonNext.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/srvn/assets/boton-de-salto.png"))); // NOI18N
+        buttonNext.addActionListener(this::buttonNextActionPerformed);
+
+        buttonPrev.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/srvn/assets/boton-de-rebobinado (1).png"))); // NOI18N
+        buttonPrev.addActionListener(this::buttonPrevActionPerformed);
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jButton2)
+                .addContainerGap(9, Short.MAX_VALUE)
+                .addComponent(buttonPrev)
                 .addGap(18, 18, 18)
-                .addComponent(jButton1)
+                .addComponent(buttonStop)
                 .addGap(18, 18, 18)
-                .addComponent(jButton3)
-                .addContainerGap())
+                .addComponent(buttonPlay)
+                .addGap(18, 18, 18)
+                .addComponent(buttonNext))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
                 .addContainerGap(15, Short.MAX_VALUE)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jButton1)
-                    .addComponent(jButton3)
-                    .addComponent(jButton2))
+                    .addComponent(buttonPrev)
+                    .addComponent(buttonNext)
+                    .addComponent(buttonPlay)
+                    .addComponent(buttonStop))
                 .addGap(28, 28, 28))
         );
 
@@ -147,11 +142,11 @@ public class FrameMusicPlayer extends javax.swing.JFrame {
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addContainerGap()
                         .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel1Layout.createSequentialGroup()
+                    .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGap(12, 12, 12)
                         .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addGap(18, 18, 18)
@@ -192,37 +187,126 @@ public class FrameMusicPlayer extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jButton2ActionPerformed
+    private void buttonPlayActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPlayActionPerformed
+        int index = myListMusic.getSelectedIndex();
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jButton1ActionPerformed
-
-    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
-
-        JFileChooser fileChooser = new JFileChooser();
-        FileNameExtensionFilter filtro = new FileNameExtensionFilter(
-                "Solo archivos tipo WAV",
-                "wav"
-        );
-        fileChooser.setFileFilter(filtro);
-        int resultado = fileChooser.showOpenDialog(this);
-        if (resultado == JFileChooser.APPROVE_OPTION) {
-            File archivo = fileChooser.getSelectedFile();
-            //reproducirArchivo(archivo);
-            System.out.println(archivo.getPath());
-
-            this.reproducirArchivo(archivo);
-
+        if (index >= 0 && playList != null) {
+            playPosition = index;
+            reproducirArchivo(playList[index]);
+        } else {
+            JOptionPane.showMessageDialog(this, "No hay una canción seleccionada");
         }
-    }//GEN-LAST:event_jButton4ActionPerformed
+    }//GEN-LAST:event_buttonPlayActionPerformed
+
+    private void buttonLadFolderActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonLadFolderActionPerformed
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        fileChooser.setAcceptAllFileFilterUsed(false);
+
+        int resultado = fileChooser.showOpenDialog(this);
+
+        if (resultado != JFileChooser.APPROVE_OPTION) {
+            return;
+        }
+
+        File folder = fileChooser.getSelectedFile();
+
+        if (folder == null) {
+            return;
+        }
+
+        playPosition = null;
+
+        if (clip != null) {
+            clip.stop();
+            clip.close();
+        }
+
+        loadPlayList(folder.getAbsolutePath());
+    }//GEN-LAST:event_buttonLadFolderActionPerformed
 
 
-    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jButton3ActionPerformed
+    private void buttonStopActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonStopActionPerformed
+
+        if (clip != null) {
+            clip.stop();
+            clip.close();
+        }
+        playPosition = null;
+
+    }//GEN-LAST:event_buttonStopActionPerformed
+
+    private void myListMusicValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_myListMusicValueChanged
+
+        if (evt.getValueIsAdjusting()) {
+            return;
+        }
+
+        if (playList == null) {
+            return;
+        }
+
+        int index = myListMusic.getSelectedIndex();
+
+        if (index >= 0) {
+
+            playPosition = index;
+
+            reproducirArchivo(playList[playPosition]);
+        }
+    }//GEN-LAST:event_myListMusicValueChanged
+
+    private void buttonNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonNextActionPerformed
+        if (playList == null || playList.length == 0) {
+            return;
+        }
+
+        int index = myListMusic.getSelectedIndex();
+
+        // ❌ Si no hay selección → empezar en 0
+        if (index < 0) {
+            index = 0;
+        } else {
+            index++;
+        }
+
+        // 🔁 Si llega al final → volver al inicio
+        if (index >= playList.length) {
+            index = 0;
+        }
+
+        // ✔ actualizar estado
+        playPosition = index;
+        myListMusic.setSelectedIndex(index);
+
+    }//GEN-LAST:event_buttonNextActionPerformed
+
+    private void buttonPrevActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPrevActionPerformed
+        // ❌ Negator
+        if (playList == null || playList.length == 0) {
+            return;
+        }
+
+        int index = myListMusic.getSelectedIndex();
+
+        // ❌ Si no hay selección → empezar en 0
+        if (index < 0) {
+            index = 0;
+        } else {
+            index--;
+        }
+
+        // 🔁 Si baja de 0 → ir al último
+        if (index < 0) {
+            index = playList.length - 1;
+        }
+
+        // ✔ actualizar estado
+        playPosition = index;
+        myListMusic.setSelectedIndex(index);
+
+
+    }//GEN-LAST:event_buttonPrevActionPerformed
 
     public void reproducirArchivo(File archivo) {
 
@@ -264,6 +348,43 @@ public class FrameMusicPlayer extends javax.swing.JFrame {
 
     }
 
+    public void loadPlayList(String path) {
+
+        File folder = new File(path);
+
+        // ❌ Negator: validar primero lo inválido
+        if (!folder.exists() || !folder.isDirectory()) {
+            JOptionPane.showMessageDialog(this, "Ruta inválida");
+            return;
+        }
+
+        File[] listaArchivos = folder.listFiles();
+
+        // ❌ Negator: evitar null
+        if (listaArchivos == null) {
+            JOptionPane.showMessageDialog(this, "No se pudo leer la carpeta");
+            return;
+        }
+
+        modelo.clear();
+
+        java.util.List<File> listaWav = new java.util.ArrayList<>();
+
+        for (File archivo : listaArchivos) {
+
+            // ❌ Negator: ignorar lo que no sirve
+            if (!archivo.isFile() || !archivo.getName().toLowerCase().endsWith(".wav")) {
+                continue;
+            }
+
+            listaWav.add(archivo);
+            modelo.addElement(archivo.getName());
+        }
+
+        // ✔ conversión moderna
+        playList = listaWav.toArray(File[]::new);
+    }
+
     /**
      * @param args the command line arguments
      */
@@ -290,10 +411,11 @@ public class FrameMusicPlayer extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton jButton1;
-    private javax.swing.JButton jButton2;
-    private javax.swing.JButton jButton3;
-    private javax.swing.JButton jButton4;
+    private javax.swing.JButton buttonLadFolder;
+    private javax.swing.JButton buttonNext;
+    private javax.swing.JButton buttonPlay;
+    private javax.swing.JButton buttonPrev;
+    private javax.swing.JButton buttonStop;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
